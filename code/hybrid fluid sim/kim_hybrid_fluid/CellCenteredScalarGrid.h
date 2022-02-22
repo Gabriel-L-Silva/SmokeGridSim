@@ -58,6 +58,10 @@ public:
     return this->_untouched_cellSize;
   }
 
+  auto const bounds() const
+  {
+    return this->_untouched_bounds;
+  }
 };
 
 } // end namespace cg

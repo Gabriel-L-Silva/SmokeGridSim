@@ -25,9 +25,9 @@ namespace cg
 
     GridSolver(const Index<D>& size, const vec& spacing, const vec& origin)
     {
-      _velocity = new FaceCenteredGrid<D, real>(size, spacing, origin);
-      _density = new CellCenteredScalarGrid<D, real>(size, spacing, origin);
-    
+      _velocity = new FaceCenteredGrid<D, real>(size+2, spacing, origin-spacing);
+      _density = new CellCenteredScalarGrid<D, real>(size+2, spacing, origin-spacing);
+      _solverSize = Index2{ size.x,size.y };
       // use Adaptive SubTimeStepping
       this->setIsUsingFixedSubTimeSteps(false);
     }
@@ -65,7 +65,7 @@ namespace cg
     void setClosedDomainBoundaryFlag(int flag);
 
     // Returns grid size.
-    const auto& size() const { return _velocity->size(); }
+    const auto& size() const { return _solverSize; }
 
     // Returns grid cell spacing.
     const auto& gridSpacing() const { return _velocity->gridSpacing(); }
@@ -86,6 +86,7 @@ namespace cg
     /*const auto& emitter() const;
      TODO
     void setEmitte(const GridEmitter* emitter);*/
+
 
   protected:
     // PhysicsAnimation virtual functions
@@ -109,7 +110,17 @@ namespace cg
 
     virtual void computeAdvection(double timeInterval);
 
+    void advectDensity(Index2 idx, double timeInterval);
+   
+    void advectVelocity(Index2 idx, double timeInterval);
+
+    void computeSource(double timeInterval);
+
     void computeGravity(double timeInterval);
+    
+    void densityStep(double timeInterval);
+    
+    void velocityStep(double timeInterval);
 
     virtual ScalarField<D, real>* fluidSdf() const;
 
@@ -122,6 +133,7 @@ namespace cg
     VectorField<D, real>* colliderVelocityField() const;
 
   private:
+    Index2 _solverSize{ 0 , 0};
     vec _gravity{ real(0.0f), real(-9.8f) };
     real _viscosityCoefficient{ 0.0f };
     real _maxCfl{ 5.0f };
@@ -187,6 +199,39 @@ namespace cg
 
   template<size_t D, typename real>
   inline void
+    GridSolver<D, real>::densityStep(double timeInterval)
+  {
+    computeSource(timeInterval);
+
+    computeViscosity(timeInterval);//k=0, passthrough
+
+    computeAdvection(timeInterval);
+  }
+
+  template<size_t D, typename real>
+  inline void
+    GridSolver<D, real>::velocityStep(double timeInterval)
+  {
+#ifdef _DEBUG
+    // asserting min grid size
+    assert(_velocity->size().min() > 0);
+#endif // _DEBUG
+
+    beginAdvanceTimeStep(timeInterval);
+
+    //computeExternalForces(timeInterval);
+
+    computeViscosity(timeInterval);//k=0, passthrough
+
+    computePressure(timeInterval);
+
+    computeAdvection(timeInterval);
+
+    endAdvanceTimeStep(timeInterval);
+  }
+
+  template<size_t D, typename real>
+  inline void
     GridSolver<D, real>::onAdvanceTimeStep(double timeInterval)
   {
 #ifdef _DEBUG
@@ -196,13 +241,9 @@ namespace cg
 
     beginAdvanceTimeStep(timeInterval);
 
-    computeExternalForces(timeInterval);
+    densityStep(timeInterval);
 
-    computeViscosity(timeInterval);
-
-    computePressure(timeInterval);
-
-    computeAdvection(timeInterval);
+    velocityStep(timeInterval);
 
     endAdvanceTimeStep(timeInterval);
   }
@@ -278,10 +319,51 @@ namespace cg
   }
 
   template<size_t D, typename real>
+  inline void GridSolver<D, real>::advectVelocity(Index2 idx, double timeInterval)
+  {
+    //TODO
+  }
+
+  template<size_t D, typename real>
+  inline void GridSolver<D, real>::advectDensity(Index2 idx, double timeInterval)
+  {
+    auto vel = vec(_velocity->velocityAt<0>(idx), _velocity->velocityAt<1>(idx));
+    auto pos = _density->dataPosition(idx);
+    auto bounds = _density->bounds();
+    auto cellSize = _density->cellSize();
+
+    auto minX = bounds.min().x + cellSize.x;
+    auto maxX = bounds.max().x - cellSize.x;
+    auto minY = bounds.min().y + cellSize.y;
+    auto maxY = bounds.max().y - cellSize.y;
+
+    //Stop backtracing at cell face
+    auto newPos = pos - vel * timeInterval;
+    newPos.x = newPos.x < minX ? minX : newPos.x;
+    newPos.x = newPos.x > maxX ? maxX : newPos.x;
+    newPos.y = newPos.y < minY ? minY : newPos.y;
+    newPos.y = newPos.y > maxY ? maxY : newPos.y;
+
+    _density->operator[](idx) = _density->sample(newPos);
+  }
+
+  template<size_t D, typename real>
   inline void
     GridSolver<D, real>::computeAdvection(double timeInterval)
   {
-    // TODO
+    auto N = size().x;
+    Index2 index;
+    for (index.y = 1; index.y <= N; ++index.y)
+      for (index.x = 1; index.x <= N; ++index.x)
+        advectDensity(index, timeInterval);
+    
+    applyBoundaryCondition();
+  }
+
+  template<size_t D, typename real>
+  inline void GridSolver<D, real>::computeSource(double timeInterval)
+  {    
+    applyBoundaryCondition();
   }
 
   template<size_t D, typename real>
@@ -332,8 +414,20 @@ namespace cg
   inline void
     GridSolver<D, real>::applyBoundaryCondition()
   {
-    auto depth = static_cast<unsigned int>(std::ceil(_maxCfl));
-    _boundaryConditionSolver.constrainVelocity(_velocity, depth);
+    /*auto depth = static_cast<unsigned int>(std::ceil(_maxCfl));
+    _boundaryConditionSolver.constrainVelocity(_velocity, depth);*/
+    auto N = size().x;
+    for (int i = 1; i <= N; i++)
+    {
+      _density->operator[](Index2(0, i)) = _density->operator[](Index2(1, i));
+      _density->operator[](Index2(N+1, i)) = _density->operator[](Index2(N, i));
+      _density->operator[](Index2(i, 0)) = _density->operator[](Index2(i, 1));
+      _density->operator[](Index2(i, N+1)) = _density->operator[](Index2(i, N));
+    }
+    _density->operator[](Index2(0, 0)) = .5f* (_density->operator[](Index2(1, 0))+ _density->operator[](Index2(0, 1)));
+    _density->operator[](Index2(0, N+1)) = .5f * (_density->operator[](Index2(1, N+1)) + _density->operator[](Index2(0, N)));
+    _density->operator[](Index2(N+1, 0)) = .5f * (_density->operator[](Index2(N, 0)) + _density->operator[](Index2(N+1, 1)));
+    _density->operator[](Index2(N+1, N+1)) = .5f * (_density->operator[](Index2(N, N+1)) + _density->operator[](Index2(N+1, N)));
   }
 
   template<size_t D, typename real>

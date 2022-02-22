@@ -82,7 +82,7 @@ namespace cg
 
     struct EmitterConfig
     {
-      vec2f min{ 0.0f }, max{ 2.0f };
+      float min{ 0.0f }, max{ 2.0f };
       vec2f center{ 0.0f };
       float radius{ 0.2f };
       float particleSpacing{ 1.0f / 128.0f };
@@ -110,7 +110,7 @@ namespace cg
     GridSolver<2, real>* _solver{ nullptr };
     bool _useAdaptiveTimeStepping{ false };
     size_t _numberOfFixedSubTimeSteps = 5;
-    size_t _gridSize{ 100 };
+    size_t _gridSize{ 64 };
     float _viscosity = 0.0f;
     vec2f _gravity{ 0.0f, -9.8f };
     // emitters
@@ -157,6 +157,8 @@ namespace cg
     bool mouseMoveEvent(double, double) override;
 
     Index2 _source_pos = Index2{-1, -1};
+    real _source_force = 10.0f;
+    Index2 _force_pos = Index2{ -1, -1 };
     vec_type _force_dir;
 
 
@@ -183,7 +185,7 @@ namespace cg
   inline real
     GLSimulationWindow<real>::func3(vec2f v)
   {
-    return math::clamp<real>(v.y, 0, 1);
+    return math::clamp<real>(math::abs(v.x+v.y), 0, 1);
   }
 
   template <typename real>
@@ -206,10 +208,6 @@ namespace cg
     glGenBuffers(1, &_ebo);
     glBindVertexArray(_vao);
 
-    _solver = new GridSolver<2, real>(
-      Index2(_gridSize, _gridSize),
-      vec_type(static_cast<real>(0.1f)),
-      vec_type(static_cast<real>(-1.0f)));
     _program.setUniform("radius", (float)_radius);
     // TODO: allow window resize
     _program.setUniformVec2("viewportSize", cg::vec2f{ 1270, 720 });
@@ -240,23 +238,34 @@ namespace cg
   GLSimulationWindow<real>::buildSolver()
   {
     _ready = true;
-    auto origin = vec_type{ static_cast<real>(-1.0f) };
+    auto gridSize = Index2{ int64_t(_gridSize)};
+    auto spacing = vec_type{ static_cast<real>((_emitterConfigs[0].max - _emitterConfigs[0].min) / _gridSize) };
+    auto origin = vec_type{ static_cast<real>(-1.0f) } + vec_type{ static_cast<real>(_emitterConfigs[0].min) };
     _solver = new GridSolver<2, real>(
-      Index2{ int64_t(_gridSize) },
-      vec_type{ static_cast<real>(_emitterConfigs[0].max.x / _gridSize) },
+      gridSize,
+      spacing,
       origin
       );
-    auto data = _solver->density();
+    auto dens = _solver->density();
     auto n = _solver->size();
+    auto N = n.x;
     auto i = 0;
-    for (auto& v : *data)
+    for (int i = 1; i <= N; i++)
     {
-      v = func3(data->dataOrigin() + vec_type((i / n.x), (i % n.y)) * data->cellSize());
-      i++;
-      if (i < n.x / 2)
-        v = 0.5;
+      for (int j = 1; j <= N; j++)
+      {
+        dens->operator[](Index2(i, j)) = 0;// func3(dens->dataPosition(Index2(i, j)));
+      }
     }
-    data->operator[](Index2(1, 3)) = 1.f;
+    //dens->operator[](Index2(1, 3)) = 1.f;
+
+    auto vel = _solver->velocity();
+    for (i = 0; i < n.prod(); i++)
+    {
+      vel->velocityAt<0>(i) = 0;
+      vel->velocityAt<1>(i) = 0;
+    }
+
     _solver->setGravity(vec_type{ _gravity });
     _solver->setViscosityCoefficient(_viscosity);
 
@@ -272,11 +281,11 @@ namespace cg
 
     _positions->bind();
     _positions->resize(d_size.x*d_size.y);
-    auto size = data->size();
+    auto size = dens->size();
     std::vector<vec_type> positions(size.x * size.y);
     for (size_t i = 0; i < _positions->size(); i++)
     {
-      positions[i] = data->dataPosition(Index2{ Index2::base_type(i / size.x), Index2::base_type(i % size.y) });
+      positions[i] = dens->dataPosition(Index2{ Index2::base_type(i / size.x), Index2::base_type(i % size.y) });
     }
     _positions->setData(positions.data());
 
@@ -287,7 +296,7 @@ namespace cg
     _alphas->resize(d_size.x * d_size.y);
     std::vector<real> alphas(d_size.x * d_size.y);
     for (size_t i = 0; i < _alphas->size(); i++)
-      alphas[i] = data->sample(data->dataOrigin() + vec_type((i / d_size.x), (i % d_size.y)) * data->cellSize());
+      alphas[i] = dens->sample(dens->dataPosition(Index2{ Index2::base_type(i / size.x), Index2::base_type(i % size.y) }));
     _alphas->setData(alphas.data());
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
@@ -349,6 +358,10 @@ namespace cg
       if (ImGui::CollapsingHeader("Particle Emmiter"))
       {
         surfaceOptions();
+        if (ImGui::Button("Add Emitter"))
+        {
+          _emitterConfigs.push_back(EmitterConfig());
+        }
         ImGui::ColorEdit3("Particles Color", (float*)&_particleColor);
       }
       if (_emitterConfigs.size() > 0)
@@ -399,12 +412,12 @@ namespace cg
     GLSimulationWindow<real>::boxEmitterOptions(EmitterConfig& config, int id)
   {
     auto l = "##" + std::to_string(id);
-    ImGui::DragFloat2(("Min" + l).c_str(), (float*)&config.min, 0.1f, 0.0f, 2.0f);
-    ImGui::DragFloat2(("Max" + l).c_str(), (float*)&config.max, 0.1f, 0.05f, 2.0f);
+    ImGui::DragFloat(("Min" + l).c_str(), &config.min, 0.1f, 0.0f, 2.0f);
+    ImGui::DragFloat(("Max" + l).c_str(), &config.max, 0.1f, 0.05f, 2.0f);
     ImGui::DragFloat(("Particle Spacing" + l).c_str(), (float*)&config.particleSpacing, 0.001f, 1.0f / 200.0f, 0.2f);
 
-    _bmin.x = math::clamp<real>(config.min.x, 0.0f, config.max.x);
-    _bmin.y = math::clamp<real>(config.min.y, 0.0f, config.max.y);
+    _bmin.x = math::clamp<real>(config.min, 0.0f, config.max);
+    _bmin.y = math::clamp<real>(config.min, 0.0f, config.max);
   }
 
   template<typename real>
@@ -428,6 +441,9 @@ namespace cg
       drawEmitter();
       return;
     }
+    auto dens = _solver->density();
+    if (_source_pos.x != -1 && _source_pos.y != -1)
+      (*dens)[_source_pos] = math::clamp<real>((*dens)[_source_pos] + _source_force * _frame.timeIntervalInSeconds, 0, 1);
 
     if (!_paused)
       _solver->advanceFrame(_frame++);
@@ -465,8 +481,7 @@ namespace cg
     auto size = data->size();
     //glDrawArrays(GL_POINTS, 0, size.x * size.y);
     glDrawElements(GL_TRIANGLES, 6* size.x * size.y, GL_UNSIGNED_INT, 0);
-    if (_source_pos.x != -1 && _source_pos.y != -1)
-      printf("%d, %d\n", _source_pos.x, _source_pos.y);
+    
     if (_drawGrid)
       drawGrid();
   }
@@ -493,9 +508,9 @@ namespace cg
 
     auto graphics = this->g2();
     const auto& grid = _solver->velocity();
-    auto bounds = Bounds2f{ vec2f{-1.0f}, vec2f{1.0f} };
+    auto bounds = Bounds2f{ vec2f{_emitterConfigs[0].min -1.0f}, vec2f{_emitterConfigs[0].max- 1.0f} };
     auto gridSize = Index2{ Index2::base_type(_gridSize) };
-    cg::vec2f gridSpacing{ 2.0f / _gridSize };
+    auto gridSpacing = _solver->gridSpacing();
     cg::vec2f start{ bounds.min() };
     start = m.transform(cg::vec4f{ start.x, start.y, 0.0f, 1.0f });
     cg::vec2f end{ bounds.max().x, bounds.min().y };
@@ -535,7 +550,7 @@ namespace cg
     for (const auto& conf : _emitterConfigs)
     {
       if (conf.isBox) // box
-        graphics->drawBounds(Bounds2f{ conf.min + origin, conf.max + origin });
+        graphics->drawBounds(Bounds2f{ vec2f{conf.min} + origin, vec2f{conf.max} + origin });
       else // sphere
         graphics->drawCircumference(conf.center + origin, conf.radius);
     }
@@ -548,9 +563,9 @@ namespace cg
   {
     int i, j;
     int xPos, yPos;
-
+    //TODO arrumar para funcionar com qqr tamanho de grid(emitter)
     cursorPosition(xPos, yPos);
-    float w = width() - 1;
+    float w = width()-1;
     float h = height();
     i = _solver->size().x * xPos / w;
     j = _solver->size().y * (h - yPos) / h;
@@ -578,7 +593,7 @@ namespace cg
 
   template<typename real>
   inline bool
-  GLSimulationWindow<real>::mouseButtonInputEvent(int button, int actions, int mods)
+    GLSimulationWindow<real>::mouseButtonInputEvent(int button, int actions, int mods)
   {
     if (ImGui::GetIO().WantCaptureMouse)
       return false;
@@ -586,7 +601,12 @@ namespace cg
 
     auto active = actions == GLFW_PRESS;
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT)
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && actions == GLFW_RELEASE)
+    {   
+      _force_pos = Index2{ -1,-1 };
+      _dragFlags.enable(DragBits::Force, false);
+    }
+    else if (button == GLFW_MOUSE_BUTTON_RIGHT)
       _dragFlags.enable(DragBits::Force, active);
     else if (button == GLFW_MOUSE_BUTTON_LEFT && actions == GLFW_RELEASE)
     {
@@ -615,8 +635,6 @@ namespace cg
     const auto dx = (_pivotX - _mouseX);
     const auto dy = (_pivotY - _mouseY);
 
-    _pivotX = _mouseX;
-    _pivotY = _mouseY;
     if (dx != 0 || dy != 0)
     {
       if (_dragFlags.isSet(DragBits::Source))
@@ -626,9 +644,12 @@ namespace cg
       }
       if (_dragFlags.isSet(DragBits::Force))
       {
-        _force_dir = vec_type(dx, dy);
+        _force_pos = mouseToGridIndex(_pivotX, _pivotY);
+        _force_dir = vec_type(-dx, dy);
       }
     }
+    _pivotX = _mouseX;
+    _pivotY = _mouseY;
     return true;
   }
 } // end namespace cg

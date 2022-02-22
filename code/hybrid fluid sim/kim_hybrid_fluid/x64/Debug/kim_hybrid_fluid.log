@@ -1,0 +1,156 @@
+﻿  Main.cpp
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(467,44): warning C4244: 'argumento': conversão de 'cg::Index<2>::base_type' para 'GLsizei', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(423): message : ao compilar a função de membro 'void cg::GLSimulationWindow<float>::renderScene(void)' do modelo da classe
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\Main.cpp(11): message : consulte a referência à instanciação 'cg::GLSimulationWindow<float>' do modelo da classe que está sendo compilada
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(469,14): warning C4477: 'printf': a cadeia de formato '%d' requer um argumento do tipo 'int', mas um argumento variadic 1 tem o tipo 'cg::Index<2>::base_type'
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(469,14): message : considere usar '%lld' na cadeia de formato
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(469,14): message : considere usar '%Id' na cadeia de formato
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(469,14): message : considere usar '%I64d' na cadeia de formato
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(469,14): warning C4477: 'printf': a cadeia de formato '%d' requer um argumento do tipo 'int', mas um argumento variadic 2 tem o tipo 'cg::Index<2>::base_type'
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(469,14): message : considere usar '%lld' na cadeia de formato
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(469,14): message : considere usar '%Id' na cadeia de formato
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(469,14): message : considere usar '%I64d' na cadeia de formato
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(254,61): warning C4244: 'argumento': conversão de 'cg::Index<2>::base_type' para 'real', possível perda de dados
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(241): message : ao compilar a função de membro 'void cg::GLSimulationWindow<float>::buildSolver(void)' do modelo da classe
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(356): message : consulte a referência à instanciação 'void cg::GLSimulationWindow<float>::buildSolver(void)' do modelo que está sendo compilada
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(192): message : ao compilar a função de membro 'void cg::GLSimulationWindow<float>::initialize(void)' do modelo da classe
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(254,50): warning C4244: 'argumento': conversão de 'cg::Index<2>::base_type' para 'real', possível perda de dados
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(274,32): warning C4244: 'argumento': conversão de 'cg::Index<2>::base_type' para 'uint32_t', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(284,34): warning C4244: 'argumento': conversão de 'cg::Index<2>::base_type' para 'uint32_t', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(287,30): warning C4244: 'argumento': conversão de 'cg::Index<2>::base_type' para 'uint32_t', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(290,81): warning C4244: 'argumento': conversão de 'size_t' para 'real', possível perda de dados
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(290,65): warning C4244: 'argumento': conversão de 'size_t' para 'real', possível perda de dados
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(300,20): warning C4244: 'inicializando': conversão de 'cg::Index<2>::base_type' para 'int', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(303,38): warning C4244: '=': conversão de 'cg::Index<2>::base_type' para '_Ty', possível perda de dados
+          with
+          [
+              _Ty=int
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(305,49): warning C4244: '=': conversão de 'cg::Index<2>::base_type' para '_Ty', possível perda de dados
+          with
+          [
+              _Ty=int
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(306,38): warning C4244: '=': conversão de 'cg::Index<2>::base_type' para '_Ty', possível perda de dados
+          with
+          [
+              _Ty=int
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(564,13): warning C4244: 'inicializando': conversão de 'int' para 'float', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(563): message : ao compilar a função de membro 'cg::Index2 cg::GLSimulationWindow<float>::mouseToGridIndex(double,double)' do modelo da classe
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(625): message : consulte a referência à instanciação 'cg::Index2 cg::GLSimulationWindow<float>::mouseToGridIndex(double,double)' do modelo que está sendo compilada
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(565,13): warning C4244: 'inicializando': conversão de 'int' para 'float', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(568,11): warning C4244: 'inicializando': conversão de 'double' para 'int', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(569,11): warning C4244: 'inicializando': conversão de 'double' para 'int', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(553,13): warning C4244: 'inicializando': conversão de 'int' para 'float', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(548): message : ao compilar a função de membro 'cg::Index2 cg::GLSimulationWindow<float>::mouseToGridIndex(void)' do modelo da classe
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(599): message : consulte a referência à instanciação 'cg::Index2 cg::GLSimulationWindow<float>::mouseToGridIndex(void)' do modelo que está sendo compilada
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(554,13): warning C4244: 'inicializando': conversão de 'int' para 'float', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(555,34): warning C4244: '=': conversão de 'float' para 'int', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(556,40): warning C4244: '=': conversão de 'float' para 'int', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridSolver.h(294,44): warning C4244: '=': conversão de 'cg::Index<2>::base_type' para '_Ty', possível perda de dados
+          with
+          [
+              _Ty=int
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridSolver.h(290): message : ao compilar a função de membro 'void cg::GridSolver<2,real>::computeGravity(double)' do modelo da classe
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridSolver.h(236): message : consulte a referência à instanciação 'void cg::GridSolver<2,real>::computeGravity(double)' do modelo que está sendo compilada
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridSolver.h(295,44): warning C4244: '=': conversão de 'cg::Index<2>::base_type' para '_Ty', possível perda de dados
+          with
+          [
+              _Ty=int
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridSolver.h(302,1): warning C4244: '+=': conversão de 'double' para 'real', possível perda de dados
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridSolver.h(308,1): warning C4244: '+=': conversão de 'double' para 'real', possível perda de dados
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridUtils.h(180,21): warning C4244: 'argumento': conversão de 'cg::Index<2>::base_type' para 'int', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridFractionalBoundaryConditionSolver.h(152): message : consulte a referência à instanciação 'void cg::extrapolateToRegion<2,T>(const cg::Grid<2,T> &,const cg::GridData<2,char> &,unsigned int,cg::Grid<2,T> &)' do modelo que está sendo compilada
+          with
+          [
+              T=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridFractionalBoundaryConditionSolver.h(51): message : ao compilar a função de membro 'void cg::GridFractionalBoundaryConditionSolver<2,real>::constrainVelocity(cg::Reference<cg::FaceCenteredGrid<2,real>>,unsigned int)' do modelo da classe
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridSolver.h(138): message : consulte a referência à instanciação 'cg::GridFractionalBoundaryConditionSolver<2,real>' do modelo da classe que está sendo compilada
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(73): message : consulte a referência à instanciação 'cg::GridSolver<2,real>' do modelo da classe que está sendo compilada
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GLSimulationWindow.h(72): message : ao compilar a função de membro 'cg::GLSimulationWindow<float>::~GLSimulationWindow(void)' do modelo da classe
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridUtils.h(180,35): warning C4244: 'argumento': conversão de 'cg::Index<2>::base_type' para 'int', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridUtils.h(186,21): warning C4244: 'argumento': conversão de 'cg::Index<2>::base_type' para 'int', possível perda de dados
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\MathUtils.h(299,34): warning C4244: 'argumento': conversão de 'double' para 'real', possível perda de dados
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridFractionalBoundaryConditionSolver.h(170): message : consulte a referência à instanciação 'cg::Vector<float,2> cg::projectAndApplyFriction<2,float>(const cg::Vector<float,2> &,const cg::Vector<float,2> &,real)' do modelo que está sendo compilada
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\Collider.h(102,41): warning C4244: 'argumento': conversão de 'double' para 'real', possível perda de dados
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\Collider.h(97): message : ao compilar a função de membro 'void cg::Collider<2,real>::update(double,double)' do modelo da classe
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridSolver.h(408): message : consulte a referência à instanciação 'void cg::Collider<2,real>::update(double,double)' do modelo que está sendo compilada
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\GridFractionalBoundaryConditionSolver.h(103): message : consulte a referência à instanciação 'cg::Collider<2,real>' do modelo da classe que está sendo compilada
+          with
+          [
+              real=float
+          ]
+C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\kim_hybrid_fluid\Collider.h(102,28): warning C4244: 'argumento': conversão de 'double' para 'real', possível perda de dados
+          with
+          [
+              real=float
+          ]
+  kim_hybrid_fluid.vcxproj -> C:\Users\gabriel\source\repos\fluid-sanches\code\hybrid fluid sim\cgtest\build\vs2019\x64\Debug\kim_hybrid_fluid.exe

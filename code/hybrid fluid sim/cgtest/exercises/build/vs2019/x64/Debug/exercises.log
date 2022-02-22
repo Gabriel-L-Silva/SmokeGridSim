@@ -1,0 +1,10 @@
+﻿  Assets.cpp
+  GLFramebuffer.cpp
+  KTXHelper.cpp
+  ExRGBCube.cpp
+  ExTexture.cpp
+  ExTriangle.cpp
+  Main.cpp
+  ExRandomTriangles.cpp
+  Gerando Código...
+LINK : fatal error LNK1104: não é possível abrir o arquivo 'cgD.lib'

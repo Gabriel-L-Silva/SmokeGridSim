@@ -165,6 +165,7 @@ namespace cg
     real func1(vec2f);
     real func2(vec2f);
     real func3(vec2f);
+    real func4(vec2f);
   }; // GLSimulationWindow
 
   template <typename real>
@@ -186,6 +187,13 @@ namespace cg
     GLSimulationWindow<real>::func3(vec2f v)
   {
     return math::clamp<real>(math::abs(v.x+v.y), 0, 1);
+  }
+
+  template <typename real>
+  inline real
+    GLSimulationWindow<real>::func4(vec2f v)
+  {
+    return 1;
   }
 
   template <typename real>
@@ -453,11 +461,12 @@ namespace cg
 
     const auto& data = _solver->density();
     
-    /*_alphas->bind();
+    _alphas->bind();
+    auto size = data->size();
     std::vector<real> alphas(size.x * size.y);
     for (size_t i = 0; i < _alphas->size(); i++)
-      alphas[i] = data->sample(data->dataOrigin() + vec_type((i / size.x), (i % size.y)) * data->cellSize());
-    _alphas->setData(alphas.data());*/
+      alphas[i] = data->sample(dens->dataPosition(Index2{ Index2::base_type(i / size.x), Index2::base_type(i % size.y)}));
+    _alphas->setData(alphas.data());
     
     auto projectionMatrix = cg::mat4f::perspective(
       60,
@@ -478,7 +487,6 @@ namespace cg
     _program.setUniformMat4("mvMatrix", mvMatrix);
     _program.setUniformVec4("color", _particleColor);
 
-    auto size = data->size();
     //glDrawArrays(GL_POINTS, 0, size.x * size.y);
     glDrawElements(GL_TRIANGLES, 6* size.x * size.y, GL_UNSIGNED_INT, 0);
     
@@ -561,16 +569,22 @@ namespace cg
   template<typename real>
   inline Index2 cg::GLSimulationWindow<real>::mouseToGridIndex()
   {
-    int i, j;
     int xPos, yPos;
     //TODO arrumar para funcionar com qqr tamanho de grid(emitter)
     cursorPosition(xPos, yPos);
-    float w = width()-1;
+    float w = width() - 1;
     float h = height();
-    i = _solver->size().x * xPos / w;
-    j = _solver->size().y * (h - yPos) / h;
 
-    return Index2(i, j);
+    auto size = _solver->size();
+    int i = size.x * xPos / w;
+    int j = size.y * (h - yPos) / h;
+
+    if (i < 0 || i > size.x - 1)
+      i = -1;
+    if (j < 0 || j > size.y - 1)
+      j = -1;
+
+    return Index2(i+1, j+1);
   }
 
   template<typename real>
@@ -588,7 +602,7 @@ namespace cg
     if (j < 0 || j > size.y-1)
       j = -1;
 
-    return Index2(i, j);
+    return Index2(i+1, j+1);
   }
 
   template<typename real>

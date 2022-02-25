@@ -37,6 +37,12 @@ namespace cg
       // do nothing
     }
 
+    enum class AdvectType
+    {
+      Velocity = 1,
+      Density = 2,
+    };
+
     // Returns gravity for this solver.
     const auto& gravity() const { return _gravity; };
 
@@ -108,9 +114,9 @@ namespace cg
 
     virtual void computePressure(double timeInterval);
 
-    virtual void computeAdvection(double timeInterval);
-
     void advectDensity(Index2 idx, double timeInterval);
+
+    void computeAdvection(double timeInterval, AdvectType type);
    
     void advectVelocity(Index2 idx, double timeInterval);
 
@@ -205,7 +211,7 @@ namespace cg
 
     computeViscosity(timeInterval);//k=0, passthrough
 
-    computeAdvection(timeInterval);
+    computeAdvection(timeInterval, AdvectType::Density);
   }
 
   template<size_t D, typename real>
@@ -225,7 +231,7 @@ namespace cg
 
     computePressure(timeInterval);
 
-    computeAdvection(timeInterval);
+    computeAdvection(timeInterval, AdvectType::Velocity);
 
     endAdvanceTimeStep(timeInterval);
   }
@@ -321,7 +327,37 @@ namespace cg
   template<size_t D, typename real>
   inline void GridSolver<D, real>::advectVelocity(Index2 idx, double timeInterval)
   {
-    //TODO
+    auto vel = vec(_velocity->velocityAt<0>(idx), _velocity->velocityAt<1>(idx));
+    auto bounds = _velocity->bounds();
+    auto cellSize = gridSpacing();
+    auto minX = bounds.min().x + cellSize.x;
+    auto maxX = bounds.max().x - cellSize.x;
+    auto minY = bounds.min().y + cellSize.y;
+    auto maxY = bounds.max().y - cellSize.y;
+
+    auto uPos = _velocity->positionInSpace<0>();
+
+    auto newUPos = uPos(idx) - vel * timeInterval;
+
+    //Stop backtracing at cell face
+    newUPos.x = newUPos.x < minX ? minX : newUPos.x;
+    newUPos.x = newUPos.x > maxX ? maxX : newUPos.x;
+    newUPos.y = newUPos.y < minY ? minY : newUPos.y;
+    newUPos.y = newUPos.y > maxY ? maxY : newUPos.y;
+
+    _velocity->velocityAt<0>(idx) = _velocity->sample(newUPos).x;
+
+    auto vPos = _velocity->positionInSpace<1>();
+
+    auto newVPos = vPos(idx) - vel * timeInterval;
+
+    //Stop backtracing at cell face
+    newVPos.x = newVPos.x < minX ? minX : newVPos.x;
+    newVPos.x = newVPos.x > maxX ? maxX : newVPos.x;
+    newVPos.y = newVPos.y < minY ? minY : newVPos.y;
+    newVPos.y = newVPos.y > maxY ? maxY : newVPos.y;
+
+    _velocity->velocityAt<1>(idx) = _velocity->sample(newVPos).y;
   }
 
   template<size_t D, typename real>
@@ -332,6 +368,8 @@ namespace cg
     auto bounds = _density->bounds();
     auto cellSize = _density->cellSize();
 
+    //if (idx == Index2{ 64,64 })
+      //debug("aq");
     auto minX = bounds.min().x + cellSize.x;
     auto maxX = bounds.max().x - cellSize.x;
     auto minY = bounds.min().y + cellSize.y;
@@ -344,19 +382,24 @@ namespace cg
     newPos.y = newPos.y < minY ? minY : newPos.y;
     newPos.y = newPos.y > maxY ? maxY : newPos.y;
 
-    _density->operator[](idx) = _density->sample(newPos);
+    (*_density)[idx] = _density->sample(newPos - gridSpacing() * .5f);
   }
 
   template<size_t D, typename real>
   inline void
-    GridSolver<D, real>::computeAdvection(double timeInterval)
+    GridSolver<D, real>::computeAdvection(double timeInterval, AdvectType type)
   {
     auto N = size().x;
     Index2 index;
-    for (index.y = 1; index.y <= N; ++index.y)
-      for (index.x = 1; index.x <= N; ++index.x)
-        advectDensity(index, timeInterval);
-    
+    if(type == AdvectType::Density)
+      for (index.y = 1; index.y <= N; ++index.y)
+        for (index.x = 1; index.x <= N; ++index.x)
+          advectDensity(index, timeInterval);
+    else if (type == AdvectType::Velocity)
+      for (index.y = 1; index.y <= N; ++index.y)
+        for (index.x = 1; index.x <= N; ++index.x)
+          advectVelocity(index, timeInterval);
+
     applyBoundaryCondition();
   }
 
@@ -419,6 +462,12 @@ namespace cg
     auto N = size().x;
     for (int i = 1; i <= N; i++)
     {
+      _velocity->velocityAt<0>(Index2(1, i)) = 0;
+      _velocity->velocityAt<0>(Index2(N, i)) = 0;
+
+      _velocity->velocityAt<1>(Index2(i, 1)) = 0;
+      _velocity->velocityAt<1>(Index2(i, N)) = 0;
+
       _density->operator[](Index2(0, i)) = _density->operator[](Index2(1, i));
       _density->operator[](Index2(N+1, i)) = _density->operator[](Index2(N, i));
       _density->operator[](Index2(i, 0)) = _density->operator[](Index2(i, 1));

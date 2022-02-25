@@ -94,6 +94,7 @@ namespace cg
 
     bool _paused{ true };
     bool _drawGrid{ false };
+    bool _drawVectors{ false };
     bool _enableColorMap{ false };
     double _radius = 0.005;
     vec3f camera{ 0.0f, 0.0f, 1.728524f };
@@ -126,6 +127,7 @@ namespace cg
     void boxEmitterOptions(EmitterConfig&, int);
     void sphereEmitterOptions(EmitterConfig&, int);
     void drawGrid();
+    void drawVectors();
     void drawEmitter();
     void buildSolver();
     Index2 mouseToGridIndex();
@@ -157,7 +159,7 @@ namespace cg
     bool mouseMoveEvent(double, double) override;
 
     Index2 _source_pos = Index2{-1, -1};
-    real _source_force = 10.0f;
+    real _source_force = 100.0f;
     Index2 _force_pos = Index2{ -1, -1 };
     vec_type _force_dir;
 
@@ -255,6 +257,7 @@ namespace cg
       origin
       );
     auto dens = _solver->density();
+    auto vel = _solver->velocity();
     auto n = _solver->size();
     auto N = n.x;
     auto i = 0;
@@ -262,17 +265,12 @@ namespace cg
     {
       for (int j = 1; j <= N; j++)
       {
-        dens->operator[](Index2(i, j)) = 0;// func3(dens->dataPosition(Index2(i, j)));
+        (*dens)[Index2(i, j)] = 0;// func3(dens->dataPosition(Index2(i, j)));
+        vel->velocityAt<0>(Index2(i, j)) = 0.f;
+        vel->velocityAt<1>(Index2(i, j)) = 0.f;
       }
     }
     //dens->operator[](Index2(1, 3)) = 1.f;
-
-    auto vel = _solver->velocity();
-    for (i = 0; i < n.prod(); i++)
-    {
-      vel->velocityAt<0>(i) = 0;
-      vel->velocityAt<1>(i) = 0;
-    }
 
     _solver->setGravity(vec_type{ _gravity });
     _solver->setViscosityCoefficient(_viscosity);
@@ -304,7 +302,7 @@ namespace cg
     _alphas->resize(d_size.x * d_size.y);
     std::vector<real> alphas(d_size.x * d_size.y);
     for (size_t i = 0; i < _alphas->size(); i++)
-      alphas[i] = dens->sample(dens->dataPosition(Index2{ Index2::base_type(i / size.x), Index2::base_type(i % size.y) }));
+      alphas[i] = (*dens)[Index2{ Index2::base_type(i / size.x), Index2::base_type(i % size.y) }];
     _alphas->setData(alphas.data());
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
@@ -335,6 +333,7 @@ namespace cg
   {
     ImGui::Begin("Simulation Controller");
     ImGui::Checkbox("Draw Solver Grid", &_drawGrid);
+    ImGui::Checkbox("Draw Vectors", &_drawVectors);
     if (_ready)
     {
       //ImGui::Text("Number of Particles: %ull", _solver->size.x*size.yparticleSystem().size());
@@ -451,21 +450,36 @@ namespace cg
     }
     auto dens = _solver->density();
     if (_source_pos.x != -1 && _source_pos.y != -1)
+    {
       (*dens)[_source_pos] = math::clamp<real>((*dens)[_source_pos] + _source_force * _frame.timeIntervalInSeconds, 0, 1);
+      /*auto sampled = dens->sample(dens->dataPosition(_source_pos)-_solver->gridSpacing()*.5f);
+      debug("%.2f\n", sampled);*/
+    }
+    auto vel = _solver->velocity();
+    if (_force_pos.x != -1 && _force_pos.y != -1)
+    {
+      vel->velocityAt<0>(Index2{ _force_pos.x,_force_pos.y }) += (_force_dir * _source_force * _frame.timeIntervalInSeconds).x;
+      vel->velocityAt<1>(Index2{ _force_pos.x,_force_pos.y }) += (_force_dir * _source_force * _frame.timeIntervalInSeconds).y;
+      /*auto sampled = dens->sample(dens->dataPosition(_source_pos)-_solver->gridSpacing()*.5f);
+      debug("%.2f\n", sampled);*/
+    }
 
     if (!_paused)
       _solver->advanceFrame(_frame++);
 
     _program.use();
     glBindVertexArray(_vao);
-
-    const auto& data = _solver->density();
     
     _alphas->bind();
-    auto size = data->size();
+    auto size = dens->size();
     std::vector<real> alphas(size.x * size.y);
     for (size_t i = 0; i < _alphas->size(); i++)
-      alphas[i] = data->sample(dens->dataPosition(Index2{ Index2::base_type(i / size.x), Index2::base_type(i % size.y)}));
+    {
+      //if (i == _alphas->size() - 1)
+        //debug("aq");
+      //alphas[i] = dens->sample(dens->dataPosition(Index2{ Index2::base_type(i / size.x), Index2::base_type(i % size.y) }) - _solver->gridSpacing() * .5f);
+      alphas[i] = (*dens)[Index2{ Index2::base_type(i / size.x), Index2::base_type(i % size.y) }];
+    }
     _alphas->setData(alphas.data());
     
     auto projectionMatrix = cg::mat4f::perspective(
@@ -492,6 +506,8 @@ namespace cg
     
     if (_drawGrid)
       drawGrid();
+    if (_drawVectors)
+      drawVectors();
   }
 
 
@@ -544,6 +560,78 @@ namespace cg
     }
   }
 
+  template <typename real>
+  void
+    GLSimulationWindow<real>::drawVectors()
+  {
+    auto mvMatrix = cg::mat4f::TRS(
+      camera,
+      cg::vec3f::null(),
+      cg::vec3f{ 1.0f }
+    );
+    mvMatrix.invert();
+
+    auto m = mvMatrix;
+
+    auto graphics = this->g2();
+    const auto& grid = _solver->velocity();
+    auto gridSize = Index2{ Index2::base_type(_gridSize) };
+    auto gridSpacing = _solver->gridSpacing();
+
+    cg::vec2f start;
+    cg::vec2f end;
+    cg::vec2f p0;
+    cg::vec2f p1;
+    cg::vec2f p2;
+    auto uColor = cg::Color::blue;
+    uColor.a = 0.5f;
+    auto vColor = cg::Color::green;
+    vColor.a = 0.5f;
+
+    auto uPos = grid->positionInSpace<0>();
+    auto vPos = grid->positionInSpace<1>();
+
+    for (int i = 1; i <= gridSize.y; ++i)
+    {
+      for (int j = 1; j <= gridSize.x; ++j)
+      {
+        auto idx = Index2{ i,j };
+
+        auto u = uPos(idx);
+        auto vel = vec_type{ grid->velocityAt<0>(idx), grid->velocityAt<1>(idx) };
+        auto vel_norm = vel.normalize();
+
+        if (vel.x != 0)
+        {
+          start = m.transform(cg::vec4f{ u.x, u.y, 0.0f, 1.0f });
+          end = m.transform(cg::vec4f{ u.x + vel_norm.x * gridSpacing.x, u.y, 0.0f, 1.0f });
+          graphics->setLineColor(uColor);
+          graphics->drawLine(start, end);
+          p0 = m.transform(cg::vec4f{ end.x, end.y, 0.0f, 1.0f });
+          p1 = m.transform(cg::vec4f{ end.x - 0.3f * vel_norm.x * gridSpacing.x, end.y + 0.3f * vel_norm.x * gridSpacing.x, 0.0f, 1.0f });
+          p2 = m.transform(cg::vec4f{ end.x - 0.3f * vel_norm.x * gridSpacing.x, end.y - 0.3f * vel_norm.x * gridSpacing.x, 0.0f, 1.0f });
+          graphics->setTriangleColor(uColor);
+          graphics->drawTriangle(p0, p1, p2);
+        }
+        if (vel.y != 0)
+        {
+          auto v = vPos(idx);
+          start = m.transform(cg::vec4f{ v.x, v.y, 0.0f, 1.0f });
+          end = m.transform(cg::vec4f{ v.x , v.y + vel_norm.y * gridSpacing.y, 0.0f, 1.0f });
+          graphics->setLineColor(vColor);
+          graphics->drawLine(start, end);
+        
+          p0 = m.transform(cg::vec4f{ end.x, end.y, 0.0f, 1.0f });
+          p1 = m.transform(cg::vec4f{ end.x + 0.3f * vel_norm.y * gridSpacing.y, end.y - 0.3f * vel_norm.y * gridSpacing.y, 0.0f, 1.0f });
+          p2 = m.transform(cg::vec4f{ end.x - 0.3f * vel_norm.y * gridSpacing.y, end.y - 0.3f * vel_norm.y * gridSpacing.y, 0.0f, 1.0f });
+          graphics->setTriangleColor(vColor);
+          graphics->drawTriangle(p0, p1, p2);
+        }
+
+      }
+    }
+  }
+
   template<typename real>
   inline void cg::GLSimulationWindow<real>::drawEmitter()
   {
@@ -569,6 +657,8 @@ namespace cg
   template<typename real>
   inline Index2 cg::GLSimulationWindow<real>::mouseToGridIndex()
   {
+    if (!_solver)
+      return Index2{ -1, -1 };
     int xPos, yPos;
     //TODO arrumar para funcionar com qqr tamanho de grid(emitter)
     cursorPosition(xPos, yPos);

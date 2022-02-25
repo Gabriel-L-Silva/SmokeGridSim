@@ -8,7 +8,6 @@
   BlockAllocator.cpp
   Camera.cpp
   Color.cpp
-  GLGraphics2.cpp
   GLGraphics3.cpp
   GLGraphicsBase.cpp
   GLImage.cpp
@@ -17,6 +16,7 @@
   GLProgram.cpp
   GLRenderWindow2.cpp
   GLWindow.cpp
+  GLGraphics2.cpp
   Image.cpp
   IndexList.cpp
   Gerando Código...

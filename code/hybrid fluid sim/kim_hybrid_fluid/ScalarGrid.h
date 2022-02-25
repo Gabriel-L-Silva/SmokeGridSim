@@ -27,9 +27,9 @@ public:
     const vec_type& gridSpacing,
     const vec_type& origin,
     real initialValue = 0.0f):
-    _untouched_bounds(bounds_type{ origin, gridSpacing * vec_type{size} }),
+    _untouched_bounds(bounds_type{ origin, origin + gridSpacing * vec_type{size} }),
     _untouched_cellSize(gridSpacing),
-    Base(bounds_type{ origin, gridSpacing * vec_type{size} }, size),
+    Base(bounds_type{ origin, origin + gridSpacing * vec_type{size} }, size),
     _linearSampler(this, gridSpacing, origin)
   {
     for (auto& v : *this)
